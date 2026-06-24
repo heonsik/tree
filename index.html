@@ -20,8 +20,7 @@
         </section>
 
         <nav class="nav-stack" aria-label="화면 이동">
-          <button class="nav-button active" data-view="command">팀장 업무 생성</button>
-          <button class="nav-button" data-view="inbox">내 업무함</button>
+          <button class="nav-button active" data-view="inbox">내 업무함</button>
           <button class="nav-button" data-view="tasks">업무 트리 추적</button>
           <button class="nav-button" data-view="org">조직 페르소나</button>
         </nav>
@@ -46,13 +45,13 @@
       <main class="workspace">
         <header class="topbar">
           <div>
-            <p class="eyebrow" id="view-kicker">팀장 화면</p>
-            <h2 id="view-title">업무 생성 및 추천</h2>
+            <p class="eyebrow" id="view-kicker">실행자 화면</p>
+            <h2 id="view-title">내 업무함</h2>
           </div>
           <button class="ghost-button" id="reset-demo">데모 초기화</button>
         </header>
 
-        <section class="view active" id="view-command">
+        <section class="view" id="view-command">
           <div class="command-hero">
             <div>
               <p class="eyebrow">AI Task Router</p>
@@ -125,14 +124,17 @@
           </div>
         </section>
 
-        <section class="view" id="view-inbox">
+        <section class="view active" id="view-inbox">
           <div class="panel">
             <div class="panel-heading">
               <div>
                 <p class="eyebrow" id="inbox-role">사용자 업무함</p>
                 <h3 id="inbox-title">받은 업무</h3>
               </div>
-              <span class="status-pill neutral" id="inbox-count">0건</span>
+              <div class="inbox-actions">
+                <button class="primary-button" id="open-task-create" type="button">새 업무 만들기</button>
+                <span class="status-pill neutral" id="inbox-count">0건</span>
+              </div>
             </div>
             <div id="inbox-list" class="work-list"></div>
           </div>

@@ -334,6 +334,27 @@ label {
   box-shadow: var(--shadow);
 }
 
+.panel:has(#task-tree.compact-tree) {
+  border-color: rgba(22, 118, 107, 0.28);
+  background: #202522;
+  color: #d9ebe7;
+}
+
+.panel:has(#task-tree.compact-tree) .eyebrow {
+  color: #36d0bd;
+}
+
+.panel:has(#task-tree.compact-tree) #tree-title,
+.panel:has(#task-tree.compact-tree) .tree-toolbar label {
+  color: #d9ebe7;
+}
+
+.panel:has(#task-tree.compact-tree) .tree-toolbar select {
+  border-color: rgba(0, 122, 107, 0.7);
+  background: #1a211f;
+  color: #d9ebe7;
+}
+
 .panel-heading,
 .card-head {
   display: flex;
@@ -341,6 +362,19 @@ label {
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 18px;
+}
+
+.inbox-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.inbox-actions .primary-button {
+  min-height: 38px;
+  padding: 9px 13px;
 }
 
 .panel h3 {
@@ -689,127 +723,82 @@ textarea:focus {
 
 .compact-tree {
   overflow-x: auto;
-  min-height: 440px;
+  min-height: 560px;
   padding: 24px;
-  border: 1px solid var(--line);
+  border: 1px solid rgba(22, 118, 107, 0.28);
   border-radius: 8px;
   background:
-    radial-gradient(circle at top, rgba(13, 138, 125, 0.09), transparent 34%),
-    rgba(248, 251, 250, 0.84);
+    radial-gradient(circle at 50% 7%, rgba(13, 138, 125, 0.17), transparent 26%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent),
+    #1f2623;
 }
 
-.compact-tree-inner,
-.compact-unit {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.compact-chart {
+  position: relative;
+  margin: 0 auto;
 }
 
-.compact-tree-inner {
-  min-width: max-content;
+.compact-lines {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  overflow: visible;
+}
+
+.compact-lines line {
+  stroke: rgba(0, 116, 103, 0.72);
+  stroke-width: 2;
+  stroke-linecap: round;
 }
 
 .compact-node {
-  position: relative;
+  position: absolute;
   z-index: 1;
   display: grid;
   place-items: center;
   width: 92px;
   height: 92px;
   padding: 10px;
-  border: 3px solid var(--line-strong);
+  border: 3px solid #007a6b;
   border-radius: 50%;
-  background: #ffffff;
-  color: var(--text);
+  background: #202724;
+  color: #d9ebe7;
   font-size: 14px;
   font-weight: 900;
   line-height: 1.25;
   text-align: center;
   box-shadow:
-    0 16px 30px rgba(11, 49, 43, 0.14),
-    inset 0 0 0 6px rgba(13, 138, 125, 0.04);
+    0 16px 34px rgba(0, 0, 0, 0.28),
+    0 0 0 8px rgba(0, 122, 107, 0.05),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 .compact-node.ok {
-  border-color: var(--ok);
+  border-color: #07946e;
 }
 
 .compact-node.warning {
-  border-color: var(--warning);
+  border-color: #b9912d;
 }
 
 .compact-node.danger {
-  border-color: var(--danger);
+  border-color: #b94a42;
 }
 
 .compact-node.neutral {
-  border-color: var(--accent);
+  border-color: #007a6b;
 }
 
 .compact-node.root {
   width: 104px;
   height: 104px;
-  background: linear-gradient(180deg, #10a093, var(--accent-dark));
-  color: #ffffff;
-}
-
-.compact-children {
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 34px;
-  margin-top: 42px;
-  padding-top: 24px;
-}
-
-.compact-children::before {
-  position: absolute;
-  top: 0;
-  left: 46px;
-  right: 46px;
-  border-top: 2px solid rgba(13, 138, 125, 0.36);
-  content: "";
-}
-
-.compact-children.multi::before {
-  display: none;
-}
-
-.compact-child {
-  position: relative;
-  display: flex;
-  justify-content: center;
-}
-
-.compact-child::before {
-  position: absolute;
-  top: -24px;
-  left: 50%;
-  height: 24px;
-  border-left: 2px solid rgba(13, 138, 125, 0.36);
-  content: "";
-  transform: rotate(var(--branch-angle, 0deg));
-  transform-origin: bottom center;
-}
-
-.compact-children.multi > .compact-child::before {
-  top: -54px;
-  height: 58px;
-  border-left-color: rgba(13, 138, 125, 0.5);
-}
-
-.compact-unit:has(> .compact-children.multi) > .compact-node::after {
-  display: none;
-}
-
-.compact-unit.has-children > .compact-node::after {
-  position: absolute;
-  bottom: -42px;
-  left: 50%;
-  height: 42px;
-  border-left: 2px solid rgba(13, 138, 125, 0.36);
-  content: "";
+  background: #063e37;
+  color: #eefcf9;
+  box-shadow:
+    0 18px 38px rgba(0, 0, 0, 0.32),
+    0 0 0 10px rgba(0, 122, 107, 0.08),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .tree-meta,

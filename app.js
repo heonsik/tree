@@ -198,7 +198,7 @@ const keywordMap = [
 ];
 
 let state = {
-  activeView: "command",
+  activeView: "inbox",
   activeUserId: "u-team-lead",
   recommendations: [],
   tasks: [],
@@ -947,45 +947,104 @@ function renderSelectedTaskTree() {
 }
 
 function renderCompactTaskTree(task) {
-  const creator = person(task.createdBy);
-  const children = renderCompactChildren(task.children);
+  const layout = buildCompactLayout(task);
+  const edgeMarkup = layout.edges
+    .map((edge) => `<line x1="${edge.x1}" y1="${edge.y1}" x2="${edge.x2}" y2="${edge.y2}" />`)
+    .join("");
+  const nodeMarkup = layout.nodes
+    .map(
+      (node) => `
+        <div class="compact-node ${node.className}" style="left: ${node.x}px; top: ${node.y}px" title="${node.title}">
+          ${node.name}
+        </div>
+      `
+    )
+    .join("");
+
   return `
-    <div class="compact-tree-inner">
-      <div class="compact-unit has-children">
-        <div class="compact-node root" title="${task.title}">${creator.name}</div>
-        ${children}
-      </div>
+    <div class="compact-chart" style="width: ${layout.width}px; height: ${layout.height}px">
+      <svg class="compact-lines" width="${layout.width}" height="${layout.height}" viewBox="0 0 ${layout.width} ${layout.height}" aria-hidden="true">
+        ${edgeMarkup}
+      </svg>
+      ${nodeMarkup}
     </div>
   `;
 }
 
-function renderCompactChildren(nodes) {
-  if (!nodes.length) return "";
-  const multiClass = nodes.length > 1 ? "multi" : "single";
-  const center = (nodes.length - 1) / 2;
-  return `
-    <div class="compact-children ${multiClass}">
-      ${nodes
-        .map((node, index) => {
-          const angle = nodes.length > 1 ? Math.max(-38, Math.min(38, (index - center) * 18)) : 0;
-          return renderCompactNode(node, angle);
-        })
-        .join("")}
-    </div>
-  `;
-}
+function buildCompactLayout(task) {
+  const nodeSize = 92;
+  const rootSize = 104;
+  const xGap = 126;
+  const yGap = 158;
+  let leafCursor = 0;
+  let maxDepth = 0;
+  const nodes = [];
+  const edges = [];
 
-function renderCompactNode(node, branchAngle = 0) {
-  const owner = person(node.ownerId);
-  const children = renderCompactChildren(node.children || []);
-  return `
-    <div class="compact-child" style="--branch-angle: ${branchAngle}deg">
-      <div class="compact-unit ${children ? "has-children" : ""}">
-        <div class="compact-node ${statusClass(node.status)}" title="${node.title} / ${statusLabel(node.status)}">${owner.name}</div>
-        ${children}
-      </div>
-    </div>
-  `;
+  function createItem(rawNode, depth, isRoot = false) {
+    const children = isRoot ? task.children : rawNode.children || [];
+    const childItems = children.map((child) => createItem(child, depth + 1, false));
+    const owner = isRoot ? person(task.createdBy) : person(rawNode.ownerId);
+    const status = isRoot ? task.status : rawNode.status;
+    const title = isRoot ? `${task.title} / ${statusLabel(task.status)}` : `${rawNode.title} / ${statusLabel(rawNode.status)}`;
+    let x;
+
+    if (childItems.length) {
+      x = childItems.reduce((sum, child) => sum + child.x, 0) / childItems.length;
+    } else {
+      x = leafCursor * xGap;
+      leafCursor += 1;
+    }
+
+    maxDepth = Math.max(maxDepth, depth);
+
+    return {
+      id: isRoot ? task.id : rawNode.id,
+      name: owner.name,
+      title,
+      status,
+      className: `${isRoot ? "root" : statusClass(status)}`,
+      size: isRoot ? rootSize : nodeSize,
+      depth,
+      x,
+      children: childItems,
+    };
+  }
+
+  const root = createItem(null, 0, true);
+  const leafCount = Math.max(1, leafCursor);
+  const width = Math.max(760, (leafCount - 1) * xGap + 220);
+  const offsetX = (width - ((leafCount - 1) * xGap + rootSize)) / 2;
+  const height = Math.max(420, maxDepth * yGap + 160);
+
+  function emit(item) {
+    const sizeOffset = item.size / 2;
+    const node = {
+      ...item,
+      x: Math.round(offsetX + item.x),
+      y: Math.round(26 + item.depth * yGap),
+    };
+    nodes.push(node);
+
+    item.children.forEach((childItem) => {
+      const child = {
+        ...childItem,
+        x: Math.round(offsetX + childItem.x),
+        y: Math.round(26 + childItem.depth * yGap),
+      };
+      edges.push({
+        x1: node.x + sizeOffset,
+        y1: node.y + item.size,
+        x2: child.x + child.size / 2,
+        y2: child.y,
+      });
+      emit(childItem);
+    });
+  }
+
+  emit(root);
+
+  return { width, height, nodes, edges };
 }
 
 function renderTreeNode(node, depth) {
@@ -1125,7 +1184,7 @@ function render() {
 
 function resetDemo() {
   state = {
-    activeView: "command",
+    activeView: "inbox",
     activeUserId: "u-team-lead",
     recommendations: [],
     tasks: [],
@@ -1141,13 +1200,14 @@ function resetDemo() {
   $("#recommendation-state").textContent = "추천 전";
   $("#recommendation-state").className = "status-pill";
   $("#assign-recommendations").disabled = true;
-  setView("command");
+  setView("inbox");
 }
 
 function bindEvents() {
   $("#task-form").addEventListener("submit", createRecommendations);
   $("#assign-recommendations").addEventListener("click", assignRecommendations);
   $("#reset-demo").addEventListener("click", resetDemo);
+  $("#open-task-create").addEventListener("click", () => setView("command"));
   $("#active-user").addEventListener("change", (event) => {
     state.activeUserId = event.target.value;
     render();
