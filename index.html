@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>업무 페르소나 배정 데모</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div>
+          <p class="eyebrow">Persona Ops Demo</p>
+          <h1>업무 관리</h1>
+        </div>
+
+        <section class="side-section">
+          <label for="active-user">현재 사용자</label>
+          <select id="active-user"></select>
+        </section>
+
+        <nav class="nav-stack" aria-label="화면 이동">
+          <button class="nav-button active" data-view="command">팀장 업무 생성</button>
+          <button class="nav-button" data-view="inbox">내 업무함</button>
+          <button class="nav-button" data-view="tasks">업무 트리 추적</button>
+          <button class="nav-button" data-view="org">조직 페르소나</button>
+        </nav>
+
+        <section class="side-section">
+          <p class="side-label">데모 상태</p>
+          <div class="metric">
+            <span>전체 업무</span>
+            <strong id="metric-total">0</strong>
+          </div>
+          <div class="metric">
+            <span>진행 중</span>
+            <strong id="metric-active">0</strong>
+          </div>
+          <div class="metric">
+            <span>완료 대기</span>
+            <strong id="metric-review">0</strong>
+          </div>
+        </section>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="view-kicker">팀장 화면</p>
+            <h2 id="view-title">업무 생성 및 추천</h2>
+          </div>
+          <button class="ghost-button" id="reset-demo">데모 초기화</button>
+        </header>
+
+        <section class="view active" id="view-command">
+          <div class="command-hero">
+            <div>
+              <p class="eyebrow">AI Task Router</p>
+              <h3>업무를 설명하면 조직 페르소나를 기준으로 담당 경로를 제안합니다</h3>
+              <p>복합 업무는 하위 업무로 나누고, 팀장·그룹장·파트장·파트원 중 원하는 깊이로 직접 할당할 수 있습니다.</p>
+            </div>
+            <div class="hero-steps" aria-label="업무 생성 흐름">
+              <span>업무 입력</span>
+              <span>LLM 분석</span>
+              <span>담당 경로 선택</span>
+              <span>트리 추적</span>
+            </div>
+          </div>
+
+          <div class="split-layout">
+            <form class="panel" id="task-form">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Step 1</p>
+                  <h3>자연어 업무 생성</h3>
+                </div>
+                <span class="status-pill neutral">팀장 입력</span>
+              </div>
+
+              <label for="task-title">업무명</label>
+              <input id="task-title" value="고객사 장애 대응 자동화 체계 구축" />
+
+              <label for="task-prompt">업무 설명</label>
+              <textarea id="task-prompt" rows="9">고객사에서 반복적으로 발생하는 장애를 빠르게 분류하고 담당자에게 전달하는 업무 체계를 만들고 싶다. 로그 수집, 장애 유형 분류, 관리자 알림, 처리 결과 리포트까지 자동화가 필요하다. 보안 검토와 운영 안정성도 같이 고려해야 한다.</textarea>
+
+              <div class="form-grid">
+                <div>
+                  <label for="task-priority">우선순위</label>
+                  <select id="task-priority">
+                    <option value="high">높음</option>
+                    <option value="normal">보통</option>
+                    <option value="low">낮음</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="task-complexity">업무 복잡도</label>
+                  <select id="task-complexity">
+                    <option value="auto">LLM이 판단</option>
+                    <option value="simple">단일 업무</option>
+                    <option value="complex">복합 업무</option>
+                  </select>
+                </div>
+              </div>
+
+              <button class="primary-button" type="submit">LLM 추천 생성</button>
+            </form>
+
+            <section class="panel recommendation-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Step 2</p>
+                  <h3>추천 결과 수정 및 할당</h3>
+                </div>
+                <span class="status-pill" id="recommendation-state">추천 전</span>
+              </div>
+
+              <div class="analysis-box" id="analysis-box">
+                업무 설명을 입력하고 추천을 생성하면, 팀/그룹/파트/개인 페르소나를 기준으로 하위 업무와 담당 경로가 제안됩니다.
+              </div>
+
+              <div class="recommendation-list" id="recommendation-list"></div>
+
+              <button class="primary-button full-width" id="assign-recommendations" disabled>추천안으로 업무 할당</button>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="view-inbox">
+          <div class="panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow" id="inbox-role">사용자 업무함</p>
+                <h3 id="inbox-title">받은 업무</h3>
+              </div>
+              <span class="status-pill neutral" id="inbox-count">0건</span>
+            </div>
+            <div id="inbox-list" class="work-list"></div>
+          </div>
+        </section>
+
+        <section class="view" id="view-tasks">
+          <div class="tracking-grid">
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">업무 목록</p>
+                  <h3>생성된 업무</h3>
+                </div>
+              </div>
+              <div id="task-list" class="task-list"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">트리 추적</p>
+                  <h3 id="tree-title">업무를 선택하세요</h3>
+                </div>
+                <div class="tree-toolbar">
+                  <label for="tree-view-mode">보기</label>
+                  <select id="tree-view-mode">
+                    <option value="detail">상세 보기</option>
+                    <option value="compact">간략 보기</option>
+                  </select>
+                  <span class="status-pill" id="tree-status">대기</span>
+                </div>
+              </div>
+              <div id="task-tree" class="tree-empty">업무를 생성하면 배정 트리와 승인 흐름이 표시됩니다.</div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="view-org">
+          <div class="org-grid">
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">조직 구조</p>
+                  <h3>팀 > 그룹 > 파트 > 개인</h3>
+                </div>
+              </div>
+              <div id="org-tree"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">집계 페르소나</p>
+                  <h3>상위 조직 페르소나</h3>
+                </div>
+              </div>
+              <div id="persona-summary" class="persona-summary"></div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <template id="recommendation-template">
+      <article class="recommendation-card">
+        <div class="card-head">
+          <div>
+            <p class="eyebrow rec-index"></p>
+            <h4 class="rec-title"></h4>
+          </div>
+          <span class="score-badge"></span>
+        </div>
+        <p class="rec-description"></p>
+        <div class="tag-row rec-skills"></div>
+        <div class="assignment-grid">
+          <label>
+            할당 방식
+            <select class="rec-route"></select>
+          </label>
+          <label>
+            그룹
+            <select class="rec-group"></select>
+          </label>
+          <label>
+            파트
+            <select class="rec-part"></select>
+          </label>
+          <label>
+            담당자
+            <select class="rec-person"></select>
+          </label>
+        </div>
+        <p class="reason-text"></p>
+      </article>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
